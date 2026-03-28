@@ -295,6 +295,7 @@ impl S3 for FileSystem {
         let file_len = file_metadata.len();
 
         let obj_attrs = self.load_object_attributes(&input.bucket, &input.key, None).await?;
+        let md5_sum = self.get_md5_sum(&input.bucket, &input.key).await?;
 
         #[allow(clippy::redundant_closure_for_method_calls)]
         let output = HeadObjectOutput {
@@ -308,6 +309,7 @@ impl S3 for FileSystem {
             website_redirect_location: obj_attrs.as_ref().and_then(|a| a.website_redirect_location.clone()),
             last_modified: Some(last_modified),
             metadata: obj_attrs.as_ref().and_then(|a| a.user_metadata.clone()),
+            e_tag: Some(ETag::Strong(md5_sum)),
             ..Default::default()
         };
         Ok(S3Response::new(output))
